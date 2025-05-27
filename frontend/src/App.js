@@ -30,8 +30,18 @@ export function AuthProvider({ children }) {
     localStorage.removeItem("token");
   };
 
+  // Helper fetch function that includes JWT token in Authorization header
+  const authFetch = (url, options = {}) => {
+    const headers = {
+      "Content-Type": "application/json",
+      ...(options.headers || {}),
+      Authorization: `Bearer ${token}`
+    };
+    return fetch(url, { ...options, headers });
+  };
+
   return (
-    <AuthContext.Provider value={{ user, token, login, logout }}>
+    <AuthContext.Provider value={{ user, token, login, logout, authFetch }}>
       {children}
     </AuthContext.Provider>
   );
@@ -85,7 +95,7 @@ function Register() {
   );
 }
 
-// --- Login Form (used in Home if not logged in) ---
+// --- Login Form ---
 function Login() {
   const { login } = useAuth();
   const [form, setForm] = useState({ email: "", password: "" });
@@ -181,7 +191,7 @@ function Login() {
   );
 }
 
-// --- User Info (just name, no logout, styled for body) ---
+// --- User Info ---
 export function UserInfo() {
   const { user } = useAuth();
   if (!user) return null;
@@ -194,7 +204,7 @@ export function UserInfo() {
   );
 }
 
-// --- Logout Button in Navbar ---
+// --- Logout Button ---
 function LogoutButton() {
   const { logout } = useAuth();
   return (
@@ -217,14 +227,22 @@ function ProtectedRoute({ children }) {
 // --- Home Page ---
 function Home() {
   const [apiMessage, setApiMessage] = useState("");
-  const { user } = useAuth();
+  const { user, authFetch } = useAuth();
 
   useEffect(() => {
-    fetch("https://unique-intuition-production.up.railway.app/")
-      .then((res) => res.text())
-      .then((data) => setApiMessage(data))
+    if (!user) {
+      setApiMessage("Please login to see status");
+      return;
+    }
+
+    authFetch("https://unique-intuition-production.up.railway.app/")
+      .then(res => {
+        if (!res.ok) throw new Error("Failed to fetch");
+        return res.text();
+      })
+      .then(data => setApiMessage(data))
       .catch(() => setApiMessage("Error connecting to backend"));
-  }, []);
+  }, [user, authFetch]);
 
   if (!user) {
     return <Login />;
@@ -235,95 +253,81 @@ function Home() {
       <div className="home-hero-icon-v2"><span role="img" aria-label="growth">📊</span></div>
       <div className="home-headline-v2">Welcome to Enomy Finances!</div>
       <div className="home-desc-v2">
-        Your modern dashboard for budgeting, currency conversion, and investment tracking.<br />
-        <span className="api-status-v2">{apiMessage}</span>
+        Your modern, smart personal finance portal.
+      </div>
+      <div>
+        Backend API says: {apiMessage}
       </div>
     </div>
   );
 }
 
-// --- Layout: sidebar navigation for a new look ---
+// --- Layout ---
 function Layout({ children }) {
-  const { user } = useAuth();
-
-  if (!user) {
-    return <>{children}</>;
-  }
-
   return (
-    <div className="main-layout-v2">
-      <aside className="sidebar-v2">
-        <div className="sidebar-brand-v2">
-          <span role="img" aria-label="leaf">🌱</span> Enomy Finances
-        </div>
-        <nav className="sidebar-links-v2">
-          <Link to="/dashboard" className="sidebar-link-v2">🏠 Dashboard</Link>
-          <Link to="/finances" className="sidebar-link-v2">💰 Finances</Link>
-          <Link to="/convert" className="sidebar-link-v2">💱 Convert</Link>
-          <Link to="/investment-calculator" className="sidebar-link-v2">📈 Calculator</Link>
-        </nav>
-        <div className="sidebar-footer-v2">
-          <LogoutButton />
-        </div>
-      </aside>
-      <main className="app-container-v2">
-        {children}
-      </main>
-    </div>
+    <>
+      <nav className="navbar-v2">
+        <Link to="/" className="navbar-brand-v2">
+          Enomy Finances
+        </Link>
+        <UserInfo />
+        <LogoutButton />
+      </nav>
+      <main>{children}</main>
+    </>
   );
 }
 
-// --- App Component ---
+// --- Main App ---
 export default function App() {
   return (
     <AuthProvider>
       <Router>
-        <Layout>
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/register" element={<Register />} />
-            <Route
-              path="/dashboard"
-              element={
-                <ProtectedRoute>
-                  <div>
-                    <UserInfo />
-                    <h1 className="dashboard-title-v2">
-                      Dashboard
-                    </h1>
-                    <Dashboard />
-                  </div>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/finances"
-              element={
-                <ProtectedRoute>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/register" element={<Register />} />
+          <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <Dashboard />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/finances"
+            element={
+              <ProtectedRoute>
+                <Layout>
                   <Finances />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/convert"
-              element={
-                <ProtectedRoute>
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/currency-converter"
+            element={
+              <ProtectedRoute>
+                <Layout>
                   <CurrencyConverter />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/investment-calculator"
-              element={
-                <ProtectedRoute>
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/investment-calculator"
+            element={
+              <ProtectedRoute>
+                <Layout>
                   <InvestmentCalculator />
-                </ProtectedRoute>
-              }
-            />
-            {/* fallback for any unknown routes */}
-            <Route path="*" element={<Navigate to="/" />} />
-          </Routes>
-        </Layout>
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          {/* Add more routes as needed */}
+        </Routes>
       </Router>
     </AuthProvider>
   );

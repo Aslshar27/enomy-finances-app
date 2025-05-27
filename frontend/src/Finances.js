@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from "react";
-
-const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
+import { useAuth } from "./App"; // Import the custom auth context hook
 
 export default function Finances() {
+  const { authFetch } = useAuth(); // Get the authFetch function from context
+
   const [transactions, setTransactions] = useState([]);
   const [editId, setEditId] = useState(null);
   const [editForm, setEditForm] = useState({ amount: '', description: '', type: '' });
@@ -10,16 +11,15 @@ export default function Finances() {
   const [addError, setAddError] = useState('');
   const [adding, setAdding] = useState(false);
 
-  const token = localStorage.getItem('token');
-
   useEffect(() => {
-    fetch(`${API_BASE_URL}/api/transactions`, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then(res => res.json())
+    authFetch("/api/transactions")
+      .then(res => {
+        if (!res.ok) throw new Error("Failed to fetch transactions");
+        return res.json();
+      })
       .then(data => setTransactions(Array.isArray(data) ? data : data.transactions || []))
       .catch(() => alert('Failed to fetch transactions'));
-  }, [token]);
+  }, [authFetch]);
 
   const handleChange = e => setForm({ ...form, [e.target.name]: e.target.value });
 
@@ -28,13 +28,10 @@ export default function Finances() {
     setAddError("");
     setAdding(true);
     try {
-      const res = await fetch(`${API_BASE_URL}/api/transactions`, {
+      const res = await authFetch("/api/transactions", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(form)
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.msg || "Failed to add transaction");
@@ -48,9 +45,8 @@ export default function Finances() {
 
   const handleDelete = id => {
     if (!window.confirm('Delete this transaction?')) return;
-    fetch(`${API_BASE_URL}/api/transactions/${id}`, {
+    authFetch(`/api/transactions/${id}`, {
       method: 'DELETE',
-      headers: { Authorization: `Bearer ${token}` },
     })
       .then(res => {
         if (!res.ok) throw new Error('Delete failed');
@@ -74,12 +70,9 @@ export default function Finances() {
 
   const handleUpdate = e => {
     e.preventDefault();
-    fetch(`${API_BASE_URL}/api/transactions/${editId}`, {
+    authFetch(`/api/transactions/${editId}`, {
       method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(editForm),
     })
       .then(res => res.json())
@@ -184,6 +177,8 @@ export default function Finances() {
   );
 }
 
+// (Optional) StatCard and styles here - keep same as your original code
+
 function StatCard({ label, value, color }) {
   return (
     <div style={{
@@ -203,63 +198,12 @@ function StatCard({ label, value, color }) {
   );
 }
 
-// Styles
-const thStyle = {
-  padding: "10px 8px",
-  fontWeight: 700,
-  fontSize: 16,
-  borderBottom: "2px solid #eee",
-};
-
-const tdStyle = {
-  padding: "8px 6px",
-  fontWeight: 400,
-  fontSize: 15,
-};
-
-const inputStyle = {
-  padding: "0.5rem",
-  borderRadius: 5,
-  border: "1px solid #ccd1e0",
-  minWidth: 80,
-};
-
-const btnStyle = {
-  padding: "0.47rem 1.05rem",
-  borderRadius: 5,
-  border: "none",
-  background: "#556cd6",
-  color: "#fff",
-  fontWeight: 600,
-  cursor: "pointer",
-  transition: "background 0.15s",
-};
-
-const formStyle = {
-  marginBottom: 32,
-  display: "flex",
-  gap: "0.75rem",
-  flexWrap: "wrap",
-  alignItems: "center",
-  background: "#f6f7fb",
-  borderRadius: 8,
-  padding: "1.1rem"
-};
-
-const rowHighlightStyle = {
-  background: "#f6faff",
-};
-
-const tableStyle = {
-  width: "100%",
-  borderCollapse: "collapse",
-  background: "#fff",
-  borderRadius: 8,
-  boxShadow: "0 2px 16px rgba(0,0,0,0.07)"
-};
-
-const emptyRowStyle = {
-  textAlign: "center",
-  padding: "1.5rem",
-  color: "#999"
-};
+// Styles (same as your original)
+const thStyle = { padding: "10px 8px", fontWeight: 700, fontSize: 16, borderBottom: "2px solid #eee" };
+const tdStyle = { padding: "8px 6px", fontWeight: 400, fontSize: 15 };
+const inputStyle = { padding: "0.5rem", borderRadius: 5, border: "1px solid #ccd1e0", minWidth: 80 };
+const btnStyle = { padding: "0.47rem 1.05rem", borderRadius: 5, border: "none", background: "#556cd6", color: "#fff", fontWeight: 600, cursor: "pointer", transition: "background 0.15s" };
+const formStyle = { marginBottom: 32, display: "flex", gap: "0.75rem", flexWrap: "wrap", alignItems: "center", background: "#f6f7fb", borderRadius: 8, padding: "1.1rem" };
+const rowHighlightStyle = { background: "#f6faff" };
+const tableStyle = { width: "100%", borderCollapse: "collapse", background: "#fff", borderRadius: 8, boxShadow: "0 2px 16px rgba(0,0,0,0.07)" };
+const emptyRowStyle = { textAlign: "center", padding: "1.5rem", color: "#999" };
