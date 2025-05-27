@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import API_BASE_URL from "./config"; // <-- import your centralized API url
 
 const currencies = ["USD", "EUR", "GBP", "INR", "JPY", "CAD", "AUD", "CHF"];
 
@@ -21,7 +22,7 @@ export default function CurrencyConverter() {
     setError("");
     setResult(null);
     try {
-      const res = await fetch("https://enomy-api.vercel.app/api/convert", {
+      const res = await fetch(`${API_BASE_URL}/api/convert`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form)
