@@ -36,7 +36,7 @@ export function AuthProvider({ children }) {
     const headers = {
       "Content-Type": "application/json",
       ...(options.headers || {}),
-      Authorization: `Bearer ${token}`
+      Authorization: token ? `Bearer ${token}` : undefined
     };
     return fetch(url, { ...options, headers });
   };
