@@ -54,7 +54,7 @@ function Register() {
     e.preventDefault();
     setError("");
     try {
-      const response = await fetch("http://localhost:5000/api/auth/register", {
+      const response = await fetch("https://unique-intuition-production.up.railway.app/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form)
@@ -98,7 +98,7 @@ function Login() {
     e.preventDefault();
     setError("");
     try {
-      const response = await fetch("http://localhost:5000/api/auth/login", {
+      const response = await fetch("https://unique-intuition-production.up.railway.app/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form)
@@ -220,7 +220,7 @@ function Home() {
   const { user } = useAuth();
 
   useEffect(() => {
-    fetch("http://localhost:5000/")
+    fetch("https://unique-intuition-production.up.railway.app/")
       .then((res) => res.text())
       .then((data) => setApiMessage(data))
       .catch(() => setApiMessage("Error connecting to backend"));

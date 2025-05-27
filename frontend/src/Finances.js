@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from "react";
 
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
+
 export default function Finances() {
   const [transactions, setTransactions] = useState([]);
   const [editId, setEditId] = useState(null);
@@ -11,7 +13,7 @@ export default function Finances() {
   const token = localStorage.getItem('token');
 
   useEffect(() => {
-    fetch('http://localhost:5000/api/transactions', {
+    fetch(`${API_BASE_URL}/api/transactions`, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then(res => res.json())
@@ -26,7 +28,7 @@ export default function Finances() {
     setAddError("");
     setAdding(true);
     try {
-      const res = await fetch("http://localhost:5000/api/transactions", {
+      const res = await fetch(`${API_BASE_URL}/api/transactions`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -46,7 +48,7 @@ export default function Finances() {
 
   const handleDelete = id => {
     if (!window.confirm('Delete this transaction?')) return;
-    fetch(`http://localhost:5000/api/transactions/${id}`, {
+    fetch(`${API_BASE_URL}/api/transactions/${id}`, {
       method: 'DELETE',
       headers: { Authorization: `Bearer ${token}` },
     })
@@ -72,7 +74,7 @@ export default function Finances() {
 
   const handleUpdate = e => {
     e.preventDefault();
-    fetch(`http://localhost:5000/api/transactions/${editId}`, {
+    fetch(`${API_BASE_URL}/api/transactions/${editId}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -88,57 +90,24 @@ export default function Finances() {
       .catch(() => alert('Update failed'));
   };
 
-  // Calculate totals
-  const totalIncome = transactions
-    .filter(t => t.type === 'income')
-    .reduce((sum, t) => sum + Number(t.amount), 0);
-  const totalExpense = transactions
-    .filter(t => t.type === 'expense')
-    .reduce((sum, t) => sum + Number(t.amount), 0);
+  // Totals
+  const totalIncome = transactions.filter(t => t.type === 'income').reduce((sum, t) => sum + Number(t.amount), 0);
+  const totalExpense = transactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + Number(t.amount), 0);
   const balance = totalIncome - totalExpense;
 
   return (
     <div style={{ maxWidth: 800, margin: "2rem auto" }}>
       <h2>Finances</h2>
-      <div style={{
-        display: "flex",
-        gap: 24,
-        marginBottom: 20,
-        flexWrap: "wrap"
-      }}>
+      <div style={{ display: "flex", gap: 24, marginBottom: 20, flexWrap: "wrap" }}>
         <StatCard label="Total Income" value={totalIncome} color="#4caf50" />
         <StatCard label="Total Expense" value={totalExpense} color="#e53935" />
         <StatCard label="Balance" value={balance} color="#556cd6" />
       </div>
 
       {/* Add Transaction Form */}
-      <form onSubmit={handleAdd} style={{
-        marginBottom: 32,
-        display: "flex",
-        gap: "0.75rem",
-        flexWrap: "wrap",
-        alignItems: "center",
-        background: "#f6f7fb",
-        borderRadius: 8,
-        padding: "1.1rem"
-      }}>
-        <input
-          name="amount"
-          type="number"
-          placeholder="Amount"
-          value={form.amount}
-          onChange={handleChange}
-          required
-          style={inputStyle}
-        />
-        <input
-          name="description"
-          placeholder="Description"
-          value={form.description}
-          onChange={handleChange}
-          required
-          style={inputStyle}
-        />
+      <form onSubmit={handleAdd} style={formStyle}>
+        <input name="amount" type="number" placeholder="Amount" value={form.amount} onChange={handleChange} required style={inputStyle} />
+        <input name="description" placeholder="Description" value={form.description} onChange={handleChange} required style={inputStyle} />
         <select name="type" value={form.type} onChange={handleChange} style={inputStyle}>
           <option value="income">Income</option>
           <option value="expense">Expense</option>
@@ -151,13 +120,7 @@ export default function Finances() {
 
       <h3>Transaction List</h3>
       <div style={{ overflowX: "auto" }}>
-        <table style={{
-          width: "100%",
-          borderCollapse: "collapse",
-          background: "#fff",
-          borderRadius: 8,
-          boxShadow: "0 2px 16px rgba(0,0,0,0.07)"
-        }}>
+        <table style={tableStyle}>
           <thead style={{ background: "#f6f7fb" }}>
             <tr>
               <th style={thStyle}>Amount</th>
@@ -169,41 +132,16 @@ export default function Finances() {
           <tbody>
             {transactions.length === 0 && (
               <tr>
-                <td colSpan={4} style={{ textAlign: "center", padding: "1.5rem", color: "#999" }}>
-                  No transactions yet.
-                </td>
+                <td colSpan={4} style={emptyRowStyle}>No transactions yet.</td>
               </tr>
             )}
             {transactions.map(txn =>
               editId === txn._id ? (
                 <tr key={txn._id} style={rowHighlightStyle}>
+                  <td style={tdStyle}><input name="amount" type="number" value={editForm.amount} onChange={handleEditFormChange} required style={{ ...inputStyle, width: "80px" }} /></td>
+                  <td style={tdStyle}><input name="description" value={editForm.description} onChange={handleEditFormChange} required style={{ ...inputStyle, width: "120px" }} /></td>
                   <td style={tdStyle}>
-                    <input
-                      name="amount"
-                      type="number"
-                      value={editForm.amount}
-                      onChange={handleEditFormChange}
-                      required
-                      style={{ ...inputStyle, width: "80px" }}
-                    />
-                  </td>
-                  <td style={tdStyle}>
-                    <input
-                      name="description"
-                      value={editForm.description}
-                      onChange={handleEditFormChange}
-                      required
-                      style={{ ...inputStyle, width: "120px" }}
-                    />
-                  </td>
-                  <td style={tdStyle}>
-                    <select
-                      name="type"
-                      value={editForm.type}
-                      onChange={handleEditFormChange}
-                      required
-                      style={inputStyle}
-                    >
+                    <select name="type" value={editForm.type} onChange={handleEditFormChange} required style={inputStyle}>
                       <option value="income">Income</option>
                       <option value="expense">Expense</option>
                     </select>
@@ -216,10 +154,7 @@ export default function Finances() {
               ) : (
                 <tr key={txn._id} style={{ textAlign: "center", borderBottom: "1px solid #f0f0f0" }}>
                   <td style={tdStyle}>
-                    <span style={{
-                      color: txn.type === 'income' ? "#4caf50" : "#e53935",
-                      fontWeight: 600
-                    }}>
+                    <span style={{ color: txn.type === 'income' ? "#4caf50" : "#e53935", fontWeight: 600 }}>
                       {txn.type === 'income' ? "+" : "-"}${Number(txn.amount).toLocaleString()}
                     </span>
                   </td>
@@ -249,7 +184,6 @@ export default function Finances() {
   );
 }
 
-// StatCard shows a small summary card
 function StatCard({ label, value, color }) {
   return (
     <div style={{
@@ -262,11 +196,14 @@ function StatCard({ label, value, color }) {
       textAlign: "center"
     }}>
       <div style={{ fontSize: 13, color: "#888", marginBottom: 4 }}>{label}</div>
-      <div style={{ fontSize: 22, fontWeight: 700, color }}>{value < 0 ? '-' : ''}${Math.abs(value).toLocaleString()}</div>
+      <div style={{ fontSize: 22, fontWeight: 700, color }}>
+        {value < 0 ? '-' : ''}${Math.abs(value).toLocaleString()}
+      </div>
     </div>
   );
 }
 
+// Styles
 const thStyle = {
   padding: "10px 8px",
   fontWeight: 700,
@@ -298,6 +235,31 @@ const btnStyle = {
   transition: "background 0.15s",
 };
 
+const formStyle = {
+  marginBottom: 32,
+  display: "flex",
+  gap: "0.75rem",
+  flexWrap: "wrap",
+  alignItems: "center",
+  background: "#f6f7fb",
+  borderRadius: 8,
+  padding: "1.1rem"
+};
+
 const rowHighlightStyle = {
   background: "#f6faff",
+};
+
+const tableStyle = {
+  width: "100%",
+  borderCollapse: "collapse",
+  background: "#fff",
+  borderRadius: 8,
+  boxShadow: "0 2px 16px rgba(0,0,0,0.07)"
+};
+
+const emptyRowStyle = {
+  textAlign: "center",
+  padding: "1.5rem",
+  color: "#999"
 };
