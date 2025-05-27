@@ -1,5 +1,13 @@
 import React, { useEffect, useState, createContext, useContext } from "react";
-import { BrowserRouter as Router, Routes, Route, Link, Navigate, useNavigate } from "react-router-dom";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Link,
+  Navigate,
+  useNavigate,
+  Outlet,
+} from "react-router-dom";
 import Finances from "./Finances";
 import CurrencyConverter from "./CurrencyConverter";
 import Dashboard from "./Dashboard";
@@ -36,7 +44,7 @@ export function AuthProvider({ children }) {
     const headers = {
       "Content-Type": "application/json",
       ...(options.headers || {}),
-      Authorization: token ? `Bearer ${token}` : undefined
+      Authorization: token ? `Bearer ${token}` : undefined,
     };
     return fetch(url, { ...options, headers });
   };
@@ -59,16 +67,17 @@ function Register() {
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
-  const handleChange = e => setForm({ ...form, [e.target.name]: e.target.value });
+  const handleChange = (e) =>
+    setForm({ ...form, [e.target.name]: e.target.value });
 
-  const handleSubmit = async e => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
     try {
       const response = await fetch(`${API_BASE_URL}/api/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form)
+        body: JSON.stringify(form),
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.msg || "Registration failed");
@@ -83,10 +92,35 @@ function Register() {
     <div className="auth-box-v2">
       <form onSubmit={handleSubmit} className="form-styled-v2">
         <h2>Sign Up</h2>
-        <input className="input-styled-v2" name="name" placeholder="Full Name" value={form.name} onChange={handleChange} required />
-        <input className="input-styled-v2" name="email" placeholder="Email Address" type="email" value={form.email} onChange={handleChange} required />
-        <input className="input-styled-v2" name="password" placeholder="Password" type="password" value={form.password} onChange={handleChange} required />
-        <button className="btn-main-v2" type="submit">Create Account</button>
+        <input
+          className="input-styled-v2"
+          name="name"
+          placeholder="Full Name"
+          value={form.name}
+          onChange={handleChange}
+          required
+        />
+        <input
+          className="input-styled-v2"
+          name="email"
+          placeholder="Email Address"
+          type="email"
+          value={form.email}
+          onChange={handleChange}
+          required
+        />
+        <input
+          className="input-styled-v2"
+          name="password"
+          placeholder="Password"
+          type="password"
+          value={form.password}
+          onChange={handleChange}
+          required
+        />
+        <button className="btn-main-v2" type="submit">
+          Create Account
+        </button>
         {error && <div className="error-msg-v2">{error}</div>}
         <div className="register-link-row">
           Already have an account? <Link to="/" className="register-link">Login</Link>
@@ -103,16 +137,17 @@ function Login() {
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
-  const handleChange = e => setForm({ ...form, [e.target.name]: e.target.value });
+  const handleChange = (e) =>
+    setForm({ ...form, [e.target.name]: e.target.value });
 
-  const handleSubmit = async e => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
     try {
       const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form)
+        body: JSON.stringify(form),
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.msg || "Login failed");
@@ -199,7 +234,7 @@ export function UserInfo() {
   return (
     <div className="userinfo-box-v2">
       <span>
-        Hi, <span style={{fontWeight:600, color:"#3bb6a7"}}>{user.name}</span>
+        Hi, <span style={{ fontWeight: 600, color: "#3bb6a7" }}>{user.name}</span>
       </span>
     </div>
   );
@@ -208,9 +243,14 @@ export function UserInfo() {
 // --- Logout Button ---
 function LogoutButton() {
   const { logout } = useAuth();
+  const navigate = useNavigate();
+  const handleLogout = () => {
+    logout();
+    navigate("/");
+  };
   return (
-    <button className="btn-logout-navbar-v2" onClick={logout}>
-      <span role="img" aria-label="logout" style={{marginRight: 7}}>⏏️</span>
+    <button className="btn-logout-navbar-v2" onClick={handleLogout}>
+      <span role="img" aria-label="logout" style={{ marginRight: 7 }}>⏏️</span>
       Logout
     </button>
   );
@@ -263,7 +303,7 @@ function Home() {
   );
 }
 
-// --- Layout ---
+// --- Layout with Navbar, UserInfo, LogoutButton ---
 function Layout({ children }) {
   return (
     <>
@@ -280,6 +320,7 @@ function Layout({ children }) {
 }
 
 // --- Main App ---
+// Add a /convert route as an alias to /currency-converter
 export default function App() {
   return (
     <AuthProvider>
@@ -309,6 +350,17 @@ export default function App() {
           />
           <Route
             path="/currency-converter"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <CurrencyConverter />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          {/* Fix: Add /convert as alias route for /currency-converter */}
+          <Route
+            path="/convert"
             element={
               <ProtectedRoute>
                 <Layout>
