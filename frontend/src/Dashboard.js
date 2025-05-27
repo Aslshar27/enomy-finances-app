@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 
-// V2 Dashboard: new look, no investment quote/history, modern pastel cards, motivational header
+// Load the backend API base URL from env or fallback for local dev
+const API_BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
 
 export default function Dashboard() {
   const [stats, setStats] = useState(null);
@@ -16,14 +17,14 @@ export default function Dashboard() {
       try {
         const token = localStorage.getItem("token");
         // Fetch summary stats
-        const statsRes = await fetch("/api/dashboard/summary", {
+        const statsRes = await fetch(`${API_BASE_URL}/api/dashboard/summary`, {
           headers: { Authorization: "Bearer " + token }
         });
         if (!statsRes.ok) throw new Error("Failed to fetch summary");
         const statsData = await statsRes.json();
 
         // Fetch activity
-        const activityRes = await fetch("/api/dashboard/activity", {
+        const activityRes = await fetch(`${API_BASE_URL}/api/dashboard/activity`, {
           headers: { Authorization: "Bearer " + token }
         });
         if (!activityRes.ok) throw new Error("Failed to fetch activity");
