@@ -6,7 +6,6 @@ import {
   Link,
   Navigate,
   useNavigate,
-  Outlet,
 } from "react-router-dom";
 import Finances from "./Finances";
 import CurrencyConverter from "./CurrencyConverter";
