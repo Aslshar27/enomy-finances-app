@@ -302,19 +302,35 @@ function Home() {
   );
 }
 
-// --- Layout with Navbar, UserInfo, LogoutButton ---
+// --- Layout with Sidebar Navigation ---
 function Layout({ children }) {
+  const { user } = useAuth();
+
+  if (!user) {
+    // No sidebar, just main content when not logged in
+    return <>{children}</>;
+  }
+
   return (
-    <>
-      <nav className="navbar-v2">
-        <Link to="/" className="navbar-brand-v2">
-          Enomy Finances
-        </Link>
-        <UserInfo />
-        <LogoutButton />
-      </nav>
-      <main>{children}</main>
-    </>
+    <div className="main-layout-v2">
+      <aside className="sidebar-v2">
+        <div className="sidebar-brand-v2">
+          <span role="img" aria-label="leaf">🌱</span> Enomy Finances
+        </div>
+        <nav className="sidebar-links-v2">
+          <Link to="/dashboard" className="sidebar-link-v2">🏠 Dashboard</Link>
+          <Link to="/finances" className="sidebar-link-v2">💰 Finances</Link>
+          <Link to="/currency-converter" className="sidebar-link-v2">💱 Convert</Link>
+          <Link to="/investment-calculator" className="sidebar-link-v2">📈 Calculator</Link>
+        </nav>
+        <div className="sidebar-footer-v2">
+          <LogoutButton />
+        </div>
+      </aside>
+      <main className="app-container-v2">
+        {children}
+      </main>
+    </div>
   );
 }
 
@@ -324,62 +340,54 @@ export default function App() {
   return (
     <AuthProvider>
       <Router>
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/register" element={<Register />} />
-          <Route
-            path="/dashboard"
-            element={
-              <ProtectedRoute>
-                <Layout>
+        <Layout>
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/register" element={<Register />} />
+            <Route
+              path="/dashboard"
+              element={
+                <ProtectedRoute>
                   <Dashboard />
-                </Layout>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/finances"
-            element={
-              <ProtectedRoute>
-                <Layout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/finances"
+              element={
+                <ProtectedRoute>
                   <Finances />
-                </Layout>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/currency-converter"
-            element={
-              <ProtectedRoute>
-                <Layout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/currency-converter"
+              element={
+                <ProtectedRoute>
                   <CurrencyConverter />
-                </Layout>
-              </ProtectedRoute>
-            }
-          />
-          {/* Fix: Add /convert as alias route for /currency-converter */}
-          <Route
-            path="/convert"
-            element={
-              <ProtectedRoute>
-                <Layout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/convert"
+              element={
+                <ProtectedRoute>
                   <CurrencyConverter />
-                </Layout>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/investment-calculator"
-            element={
-              <ProtectedRoute>
-                <Layout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/investment-calculator"
+              element={
+                <ProtectedRoute>
                   <InvestmentCalculator />
-                </Layout>
-              </ProtectedRoute>
-            }
-          />
-          {/* Add more routes as needed */}
-        </Routes>
+                </ProtectedRoute>
+              }
+            />
+            {/* Add more routes as needed */}
+            <Route path="*" element={<Navigate to="/" />} />
+          </Routes>
+        </Layout>
       </Router>
     </AuthProvider>
   );
