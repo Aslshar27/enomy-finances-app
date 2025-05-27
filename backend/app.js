@@ -11,16 +11,14 @@ require('dotenv').config();
 
 const app = express();
 
-// Define allowed origins (add your frontend URLs here)
 const allowedOrigins = [
   'https://enomy-finances-app.vercel.app',
-  'http://localhost:3000' // your local dev frontend (optional)
+  'http://localhost:3000'
 ];
 
-// CORS middleware with explicit origin checking and preflight support
+// CORS middleware with origin check
 app.use(cors({
   origin: function(origin, callback) {
-    // Allow requests with no origin (like curl, Postman)
     if (!origin) return callback(null, true);
     if (allowedOrigins.indexOf(origin) === -1) {
       const msg = `The CORS policy for this site does not allow access from the specified Origin: ${origin}`;
@@ -29,12 +27,20 @@ app.use(cors({
     return callback(null, true);
   },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  credentials: true, // if you use cookies or auth headers
+  credentials: true,
 }));
 
-// Handle preflight OPTIONS requests for all routes
+// Handle preflight OPTIONS requests
 app.options('*', cors({
-  origin: allowedOrigins
+  origin: function(origin, callback) {
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.indexOf(origin) === -1) {
+      return callback(new Error('The CORS policy for this site does not allow access from the specified Origin.'), false);
+    }
+    return callback(null, true);
+  },
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  credentials: true,
 }));
 
 app.use(express.json());
@@ -53,6 +59,14 @@ app.use('/api/transactions', transactionsRoute);
 app.use('/api/convert', convertRoute);
 app.use('/api/quotes', quotesRoute);
 app.use('/api/dashboard', dashboardRoutes);
+
+// CORS error handler
+app.use((err, req, res, next) => {
+  if (err && err.message && err.message.includes('CORS')) {
+    return res.status(403).json({ msg: err.message });
+  }
+  next(err);
+});
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
