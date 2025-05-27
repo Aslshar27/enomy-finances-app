@@ -11,27 +11,21 @@ require('dotenv').config();
 
 const app = express();
 
-// --- UPDATED: Add all relevant origins for production, preview, and local dev ---
+// --- CORS: List all allowed origins ---
 const allowedOrigins = [
-  'https://enomy-finances.vercel.app', // production
-  'https://enomy-finances-app.vercel.app', // old/alternate domain
-  'https://enomy-finances-7weu0ghv7-aslam-mulaffers-projects.vercel.app', // preview deploy
-  'http://localhost:3000', // local dev
+  'https://enomy-finances.vercel.app',
+  'https://enomy-finances-app.vercel.app',
+  'https://enomy-finances-7weu0ghv7-aslam-mulaffers-projects.vercel.app',
+  'http://localhost:3000',
 ];
 
-// CORS middleware with origin check and allowed headers
+// --- CORS middleware (must be very first!) ---
 const corsOptions = {
   origin: function(origin, callback) {
-    if (!origin) return callback(null, true);  // Allow non-browser requests like Postman
-    if (allowedOrigins.includes(origin)) {
-      return callback(null, true);
-    }
-    // For Vercel preview deploys (optional: allows any *.vercel.app domain)
-    if (/^https:\/\/enomy-finances.*\.vercel\.app$/.test(origin)) {
-      return callback(null, true);
-    }
-    const msg = `The CORS policy for this site does not allow access from the specified Origin: ${origin}`;
-    return callback(new Error(msg), false);
+    if (!origin) return callback(null, true); // Allow server-to-server, Postman, etc.
+    if (allowedOrigins.includes(origin)) return callback(null, true);
+    if (/^https:\/\/enomy-finances.*\.vercel\.app$/.test(origin)) return callback(null, true);
+    return callback(new Error(`CORS: Origin ${origin} not allowed`), false);
   },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
@@ -39,9 +33,9 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
-app.options('*', cors(corsOptions));
+app.options('*', cors(corsOptions)); // Handle preflight OPTIONS
 
-// Express JSON parser
+// --- JSON parser ---
 app.use(express.json());
 
 // --- MongoDB Connection ---
@@ -60,15 +54,15 @@ app.use('/api/convert', convertRoute);
 app.use('/api/quotes', quotesRoute);
 app.use('/api/dashboard', dashboardRoutes);
 
-// --- CORS error handler ---
+// --- CORS error handler (MUST be before general error handler) ---
 app.use((err, req, res, next) => {
-  if (err && err.message && err.message.includes('CORS')) {
+  if (err && err.message && err.message.startsWith('CORS')) {
     return res.status(403).json({ msg: err.message });
   }
   next(err);
 });
 
-// --- General error handler (optional, for better debugging) ---
+// --- General error handler ---
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).json({ msg: "Internal Server Error" });
