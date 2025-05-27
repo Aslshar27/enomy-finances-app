@@ -4,6 +4,7 @@ import Finances from "./Finances";
 import CurrencyConverter from "./CurrencyConverter";
 import Dashboard from "./Dashboard";
 import InvestmentCalculator from "./InvestmentCalculator";
+import API_BASE_URL from "./config";
 import "./App.css";
 
 // --- Auth Context Setup ---
@@ -64,7 +65,7 @@ function Register() {
     e.preventDefault();
     setError("");
     try {
-      const response = await fetch("https://unique-intuition-production.up.railway.app/api/auth/register", {
+      const response = await fetch(`${API_BASE_URL}/api/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form)
@@ -108,7 +109,7 @@ function Login() {
     e.preventDefault();
     setError("");
     try {
-      const response = await fetch("https://unique-intuition-production.up.railway.app/api/auth/login", {
+      const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form)
@@ -235,7 +236,7 @@ function Home() {
       return;
     }
 
-    authFetch("https://unique-intuition-production.up.railway.app/")
+    authFetch(`${API_BASE_URL}/`)
       .then(res => {
         if (!res.ok) throw new Error("Failed to fetch");
         return res.text();

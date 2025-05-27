@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from "react";
-import { useAuth } from "./App"; // Import the custom auth context hook
+import { useAuth } from "./App";
+import API_BASE_URL from "./config"; // import the centralized API URL
 
 export default function Finances() {
-  const { authFetch } = useAuth(); // Get the authFetch function from context
+  const { authFetch } = useAuth();
 
   const [transactions, setTransactions] = useState([]);
   const [editId, setEditId] = useState(null);
@@ -12,7 +13,7 @@ export default function Finances() {
   const [adding, setAdding] = useState(false);
 
   useEffect(() => {
-    authFetch("/api/transactions")
+    authFetch(`${API_BASE_URL}/api/transactions`)
       .then(res => {
         if (!res.ok) throw new Error("Failed to fetch transactions");
         return res.json();
@@ -28,7 +29,7 @@ export default function Finances() {
     setAddError("");
     setAdding(true);
     try {
-      const res = await authFetch("/api/transactions", {
+      const res = await authFetch(`${API_BASE_URL}/api/transactions`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
@@ -45,7 +46,7 @@ export default function Finances() {
 
   const handleDelete = id => {
     if (!window.confirm('Delete this transaction?')) return;
-    authFetch(`/api/transactions/${id}`, {
+    authFetch(`${API_BASE_URL}/api/transactions/${id}`, {
       method: 'DELETE',
     })
       .then(res => {
@@ -70,7 +71,7 @@ export default function Finances() {
 
   const handleUpdate = e => {
     e.preventDefault();
-    authFetch(`/api/transactions/${editId}`, {
+    authFetch(`${API_BASE_URL}/api/transactions/${editId}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(editForm),
@@ -177,8 +178,7 @@ export default function Finances() {
   );
 }
 
-// (Optional) StatCard and styles here - keep same as your original code
-
+// StatCard and styles
 function StatCard({ label, value, color }) {
   return (
     <div style={{
@@ -198,7 +198,6 @@ function StatCard({ label, value, color }) {
   );
 }
 
-// Styles (same as your original)
 const thStyle = { padding: "10px 8px", fontWeight: 700, fontSize: 16, borderBottom: "2px solid #eee" };
 const tdStyle = { padding: "8px 6px", fontWeight: 400, fontSize: 15 };
 const inputStyle = { padding: "0.5rem", borderRadius: 5, border: "1px solid #ccd1e0", minWidth: 80 };

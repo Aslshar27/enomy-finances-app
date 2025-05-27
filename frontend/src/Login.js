@@ -1,13 +1,13 @@
 import React, { useState } from "react";
-import { useAuth } from "./AuthContext";
-import { Link } from "react-router-dom";
-
-const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
+import { useAuth } from "./App";           // Adjust if your context is in a different file
+import { Link, useNavigate } from "react-router-dom";
+import API_BASE_URL from "./config";       // Centralized API URL
 
 export default function Login() {
   const { login } = useAuth();
   const [form, setForm] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
+  const navigate = useNavigate();
 
   const handleChange = e =>
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -24,6 +24,7 @@ export default function Login() {
       const data = await response.json();
       if (!response.ok) throw new Error(data.msg || "Login failed");
       login(data.user, data.token);
+      navigate("/dashboard"); // Redirect after login
     } catch (err) {
       setError(err.message);
     }

@@ -1,13 +1,13 @@
 import React, { useState } from "react";
-import { useAuth } from "./AuthContext";
-import { Link } from "react-router-dom";
-
-const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
+import { useAuth } from "./App"; // or "./AuthContext" if you split it out
+import { Link, useNavigate } from "react-router-dom";
+import API_BASE_URL from "./config";
 
 export default function Register() {
   const { login } = useAuth();
   const [form, setForm] = useState({ name: "", email: "", password: "" });
   const [error, setError] = useState("");
+  const navigate = useNavigate();
 
   const handleChange = e => setForm({ ...form, [e.target.name]: e.target.value });
 
@@ -23,6 +23,7 @@ export default function Register() {
       const data = await response.json();
       if (!response.ok) throw new Error(data.msg || "Registration failed");
       login(data.user, data.token);
+      navigate("/dashboard");
     } catch (err) {
       setError(err.message);
     }
